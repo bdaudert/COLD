@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--css-->
+    <link rel="stylesheet" href="media/css/my_style.css">
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!--jQuery-->
+    <script src="//code.jquery.com/jquery-3.1.0.min.js"></script>
+    <!--Highcharts-->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <!--My Highcharts-->
+    <script src="media/myjs/utils.js"></script>
+    <script src="media/myjs/highcharts-functions.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function () {
+        //var data_dir = 'media/json/TEST/';
+        var data_dir = 'media/json/RESULTS/';
+        //SUMS
+        var data_file = data_dir + 'ind_sums_years.json';
+        index_sums_years(data_file, 'container-1');
+        /*
+        data_file = data_dir + 'ind_sums_years_non_zero.json';
+        index_sums_years(data_file, 'container-2');
+        */
+        //Histograms
+        data_file = data_dir + 'hist_sum_all_years_and_locs.json';
+        hist_sums(data_file, 'container-3');
+       
+        /*
+        data_file = data_dir + 'hist_sum_all_years_and_locs_non_zero.json';
+        hist_sums(data_file, 'container-4');
+        */
+        //Box plots at 5 locations (non-zero indices)
+        /*
+        data_file = data_dir + 'box_plots_sums_5locs.json';
+        box_plot_sums_for_locations(data_file, 'container-5');
+        */
+
+        //AVES
+        data_file = data_dir + 'ind_aves_doys.json';
+        index_aves_doys(data_file, 'container-6');
+        data_file = data_dir + 'ind_aves_doys_non_zero.json';
+        index_aves_doys(data_file, 'container-7');
+        /*
+        data_file = data_dir + 'hist_aves_all_doys_all_locs.json';
+        hist_aves(data_file, 'container-8');
+        */
+
+        data_file = data_dir + 'hist_aves_all_doys_all_locs_non_zero.json';
+        hist_aves(data_file, 'container-9');
+        
+        /*
+        data_file = data_dir + 'box_plots_aves_5locs.json';
+        box_plot_aves_for_locations(data_file, 'container-10');
+        */
+
+        //OTHER
+        data_file = data_dir + 'box_plots_num_days_all_years_and_locs.json';
+        box_plot_num_days(data_file, 'container-11');
+    });
+    </script>
+</head>
+
+<body>
+
+<!-- Content will go here -->
+<h1 align="center">Cold Extremes in the Southwest</h1>
+<div class="row main">
+    <div class="col-md-10 col-md-offset-1">
+        <h2>Intoduction</h2>
+        <p style="max-width: 90%">
+        We identified cold outbreaks from temperature data in the
+        <a target="_blank" href="https://www.esrl.noaa.gov/psd/data/gridded/data.livneh.html">linveh dataset</a> 
+        by computing a cold index each location (grid point). 
+        The cold index at lon, lat coordinate on a day is defined as the number of degrees below the 5th percentile 
+        observed at that location. The time period over which the percentiles were computed is 1951 - 2005. 
+        This analysis is run on the livneh grid, BBOX: -125, 31, -102, 49.1 (103968 locations).
+        </p>
+    
+        <!--Figures--> 
+        <h2 align="center">Index sums</h2>
+        <div class="row">
+            <h3 align="center">Index sums</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-1"></div>
+            </div>
+        </div>
+        <!--
+        <div class="row">
+            <h3 align="center">Non-zero index sums</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-2"></div>
+            </div>
+        </div>
+        -->
+        <div class="row">
+            <h3 align="center">Histogram of index sums (all years, all locations)</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-3"></div>
+            </div>
+        </div>
+        <!--
+        <div class="row">
+            <h3 align="center">Histogram of non-zero index sums (all years, all locations)</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-4"></div>
+            </div>
+        </div> 
+        -->   
+        <!--
+        <div class="row">
+            <h3 align="center">Box plot of index sums at 5 selected locations</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-5"></div>
+            </div>
+        </div>    
+        -->
+        <h2 align="center">Index averages</h2>
+        <div class="row">
+            <h3 align="center">Index averages for each day of season (DJF)</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-6"></div>
+            </div>
+        </div>
+        <div class="row">
+            <h3 align="center">Non-zero index averages for each day of season (DJF)</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-7"></div>
+            </div>
+        </div>
+        <!--
+        <div class="row">
+            <h3 align="center">Histogram of index averages (all doys, all locations)</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-8"></div>
+            </div>
+        </div>
+        -->
+        <div class="row">
+            <h3 align="center">Histogram of non-zero index averages (all doys, all locations)</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-9"></div>
+            </div>
+        </div>    
+        <!--
+        <div class="row">
+            <h3 align="center">Box plot of index aves at 5 selected locations</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-10"></div>
+            </div>
+        </div> 
+        -->
+        <h2 align="center">Other plots</h2>
+        <div class="row">
+            <h3 align="center">Number of winter days below 5th percentile by year</h3>
+            <div class="col-md-8 col-md-offset-1">
+                <div id="container-11"></div>
+            </div>
+        </div> 
+   </div><!--col-md-10-->
+</div><!--End row main-->
+
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+       <img width="1000px" height="700px" src="media/img/PCA.png">
+    </div>
+    <br>
+    <div class="col-md-10 col-md-offset-1">
+       <img width="1000px" height="700px" src="media/img/RPCA.png">
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        <h2>Notes</h2>
+        <ul>
+            <li>Number lons, lats:
+                <ul>
+                    <li>Livneh 922,444 = 409368 combos</li>
+                    <li>INDICES_CA: 122, 259 = 31598 combos</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div> 
+
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        <h2>Questions</h2>
+        <ul>
+            <li>Histograms
+                <ul>
+                    <li>Right now we are plotting all values</li>
+                </ul>
+            </li>
+            <li>PCA http://blog.nextgenetics.net/?e=42
+                <ul>
+                    <li>Cols: dims we want to reduce (locs?)</li>
+                    <li>Rows: samples (index vals at doys for all years?)</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+
+</body>
+
+</html>
