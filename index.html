@@ -62,6 +62,16 @@
         box_plot_aves_for_locations(data_file, 'container-10');
         */
 
+        //PCA analysis
+        data_file = data_dir + 'hc_PCA_0_timeseries.json';
+        pca_ts(data_file, 'container-12', '1')
+
+        data_file = data_dir + 'hc_PCA_1_timeseries.json';
+        pca_ts(data_file, 'container-13', '2')
+
+        data_file = data_dir + 'hc_PCA_2_timeseries.json';
+        pca_ts(data_file, 'container-14', '3')
+
         //OTHER
         data_file = data_dir + 'box_plots_num_days_all_years_and_locs.json';
         box_plot_num_days(data_file, 'container-11');
@@ -158,6 +168,33 @@
             </div>
         </div> 
         -->
+        <h2 align="center">PCA Analysis</h2>
+        <div class="row">
+            <h3 align="center">Time Series of first three components</h3>
+            <div class="col-md-4 col2-md-offset-1">
+                <div id="container-12"></div>
+            </div>
+            <div class="col-md-4 col2-md-offset-1">
+                <div id="container-13"></div>
+            </div>
+            <div class="col-md-4 col2-md-offset-1">
+                <div id="container-14"></div>
+            </div>
+        </div> 
+        <!--
+        <div class="row">
+            <h3 align="center">Spatial patterns of first three components</h3>
+            <div class="col-md-4 col2-md-offset-1">
+                <div id="container-15"></div>
+            </div>
+            <div class="col-md-4 col2-md-offset-1">
+                <div id="container-16"></div>
+            </div>
+            <div class="col-md-4 col2-md-offset-1">
+                <div id="container-17"></div>
+            </div>
+        </div>
+        -->
         <h2 align="center">Other plots</h2>
         <div class="row">
             <h3 align="center">Number of winter days below 5th percentile by year</h3>
@@ -168,6 +205,7 @@
    </div><!--col-md-10-->
 </div><!--End row main-->
 
+<!--
 <div class="row">
     <div class="col-md-10 col-md-offset-1">
        <img width="1000px" height="700px" src="media/img/PCA.png">
@@ -177,39 +215,7 @@
        <img width="1000px" height="700px" src="media/img/RPCA.png">
     </div>
 </div>
-
-<div class="row">
-    <div class="col-md-10 col-md-offset-1">
-        <h2>Notes</h2>
-        <ul>
-            <li>Number lons, lats:
-                <ul>
-                    <li>Livneh 922,444 = 409368 combos</li>
-                    <li>INDICES_CA: 122, 259 = 31598 combos</li>
-                </ul>
-            </li>
-        </ul>
-    </div>
-</div> 
-
-<div class="row">
-    <div class="col-md-10 col-md-offset-1">
-        <h2>Questions</h2>
-        <ul>
-            <li>Histograms
-                <ul>
-                    <li>Right now we are plotting all values</li>
-                </ul>
-            </li>
-            <li>PCA http://blog.nextgenetics.net/?e=42
-                <ul>
-                    <li>Cols: dims we want to reduce (locs?)</li>
-                    <li>Rows: samples (index vals at doys for all years?)</li>
-                </ul>
-            </li>
-        </ul>
-    </div>
-</div>
+-->
 
 </body>
 

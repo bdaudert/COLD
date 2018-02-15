@@ -335,3 +335,48 @@ function box_plot_num_days(data_file, container){
         });
     });
 }
+
+function pca_ts(data_file, container, comp_idx){
+    $.getJSON( data_file, function( ts_data ) {
+        var data = [], i, d_utc, ymd_str, y, m, d;
+        for (i = 1; i < ts_data.length; i++){
+            ymd_str = ts_data[i][0].split('-');
+            y = parseInt(ymd_str[0]);
+            m = parseInt(ymd_str[1]) - 1;
+            d = parseInt(ymd_str[2]);
+            d_utc = Date.UTC(y,m,d);
+            data.push([d_utc, ts_data[i][1]]);
+        }
+        console.log(data);
+        Highcharts.chart(container, {
+            title: {
+                text: 'PCA time series ' + String(comp_idx) + ' component'
+            },
+            subtitle: {
+                text: ''
+            },
+            yAxis: {
+                title: {
+                    text: 'Standard deviations'
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            plotOptions: {
+                series: {
+                    label: {
+                        connectorAllowed: false
+                    },
+                    pointStart: 1
+                }
+            },
+            series: [{
+                name: 'PCA_' + String(comp_idx),
+                data: data
+            }]
+        });
+    });
+}
