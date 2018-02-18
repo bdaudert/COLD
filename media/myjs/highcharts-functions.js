@@ -344,16 +344,26 @@ function pca_ts(data_file, container, comp_idx){
             y = parseInt(ymd_str[0]);
             m = parseInt(ymd_str[1]) - 1;
             d = parseInt(ymd_str[2]);
+            //console.log(String(y) + '-' + String(m) + '-' + String(d))
             d_utc = Date.UTC(y,m,d);
-            data.push([d_utc, ts_data[i][1]]);
+            val = ts_data[i][1];
+            /*
+            if (Math.abs(val) > 1){
+                val = null;
+            }
+            */
+            data.push([d_utc, val]);
         }
-        console.log(data);
         Highcharts.chart(container, {
             title: {
-                text: 'PCA time series ' + String(comp_idx) + ' component'
+                //text: 'PCA time series ' + String(comp_idx) + ' component'
+                text:''
             },
             subtitle: {
                 text: ''
+            },
+            xAxis: {
+                type: 'datetime'
             },
             yAxis: {
                 title: {
@@ -365,6 +375,7 @@ function pca_ts(data_file, container, comp_idx){
                 align: 'right',
                 verticalAlign: 'middle'
             },
+            /*
             plotOptions: {
                 series: {
                     label: {
@@ -373,6 +384,7 @@ function pca_ts(data_file, container, comp_idx){
                     pointStart: 1
                 }
             },
+            */
             series: [{
                 name: 'PCA_' + String(comp_idx),
                 data: data
