@@ -66,10 +66,10 @@ def write_netcdf(INDICES, year, lons, lats, doys, out_dir):
     DS.close()
 
 def compute_indices(year_data, perc_data):
+    y_data = year_data
+    y_data[y_data == 1e20] = np.nan
     diff = np.absolute(np.rint(np.subtract(perc_data,year_data)))
-    # diff = np.absolute(np.subtract(perc_data, year_data))
-    # print np.subtract(diff, ind)
-    ind =  np.where(np.greater_equal(year_data, perc_data), diff, 0)
+    ind =  np.where(np.less_equal(y_data, perc_data), diff, 0)
     return ind
 
 
@@ -168,11 +168,11 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
 #M A I N
 ########
 if __name__ == '__main__' :
-    # years = range(1951, 2012)
-    years = range(1951, 1953)
+    years = range(1951, 2012)
+    # years = range(1951, 1953)
     var_name = 'tmin'
     data_dir = 'DATA/'
-    in_file_name = 'TEST_percentiles.nc'
-    out_dir = 'RESULTS/'
+    in_file_name = 'percentiles.nc'
+    out_dir = 'RESULTS/LIVNEH/'
     perc_file = out_dir + in_file_name
     get_indices(years, var_name, perc_file, data_dir, out_dir)

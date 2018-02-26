@@ -34,37 +34,13 @@ def get_plotting_data(years, data_dir):
         hist_data_nz.append(sum_nz)
         year_sums_all.append(sum_all/(num_lats*num_lons))
         year_sums_nz.append(sum_nz/(num_lats*num_lons))
-
-        '''
-        for lat_idx, lat in enumerate(lats):
-            for lon_idx, lon in enumerate(lons):
-                all_indices = [i for i in indices[lat_idx][lon_idx] if i != -9999]
-                non_zero_indices = [i for i in indices[lat_idx][lon_idx] if i >= 1]
-                s = sum(all_indices)
-                s_non_zero = sum(non_zero_indices)
-                if non_zero_indices:
-                    hist_data_nz.append(s_non_zero)
-                    count+=1
-                ll_str = str(lon) + ',' + str(lat)
-                if count <= 5 and len(ll_data.keys()) < 5 and year_idx == 0 and non_zero_indices:
-                    ll_str = str(lon) + ',' + str(lat)
-                    ll_data[ll_str] = [s_non_zero]
-                if ll_str in ll_data.keys() and year_idx != 0:
-                    ll_data[ll_str].append(s_non_zero)
-                ll_sums += s
-                ll_sums_non_zero += s_non_zero
-                hist_data_all.append(s)
-        year_sums_all.append(ll_sums / (len(lats) * len(lons)))
-        year_sums_nz.append(ll_sums_non_zero / count);
-        '''
-    # return year_sums_all, year_sums_nz, hist_data_all, hist_data_nz, ll_data
     return year_sums_all, year_sums_nz, hist_data_all, hist_data_nz
 ########
 #M A I N
 ########
 if __name__ == '__main__' :
     years = range(1951,2012)
-    data_dir = 'RESULTS/'
+    data_dir = 'RESULTS/LIVNEH/'
     # year_sums, year_sums_non_zero, hist_data, hist_data_non_zero, box_plots_5locs = get_plotting_data(years, data_dir)
     year_sums, year_sums_non_zero, hist_data, hist_data_non_zero = get_plotting_data(years, data_dir)
     '''

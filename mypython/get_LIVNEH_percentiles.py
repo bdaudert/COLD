@@ -25,7 +25,7 @@ def write_netcdf(PCTLS, lons, lats, doys, out_file):
         is computed. The base period used was 1951 - 2005
         '''
     #Define the dimensions
-    nlons = lons.shape[0]
+    nlons = lons.shape[0] #number of stations
     nlats = lats.shape[0]
     ndays = doys.shape[0]
     DS.createDimension('latitude', nlats)
@@ -33,11 +33,9 @@ def write_netcdf(PCTLS, lons, lats, doys, out_file):
     DS.createDimension('day_in_season', ndays)
 
     #Define the variables
-    lat = DS.createVariable('lat', 'f4', ('latitude',), fill_value=1e20)
-    lon = DS.createVariable('lon', 'f4', ('longitude',), fill_value=1e20)
-    # FIX ME: save doys as ints
-    # OverflowError: Python int too large to convert to C long
-    doy = DS.createVariable('doy', 'f4', ('day_in_season',), fill_value=1e20)
+    lat = DS.createVariable('lat', 'f4', ('latitude',), fill_value=-9999)
+    lon = DS.createVariable('lon', 'f4', ('longitude',), fill_value=-9999)
+    doy = DS.createVariable('doy', 'f4', ('day_in_season',), fill_value=-9999)
     pctl = DS.createVariable('percentile', 'i4', ('day_in_season', 'latitude', 'longitude'), fill_value=-9999)
     pctl.units = 'Deg Celsius'
 
@@ -49,7 +47,8 @@ def write_netcdf(PCTLS, lons, lats, doys, out_file):
     DS.close()
 
 def compute_percentile(a):
-    return int(round(np.percentile(a, 5)))
+    b = a[np.where(a!=1e20)]
+    return int(round(np.percentile(b, 5)))
 
 def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, data_dir, out_file):
     year_change = False
@@ -75,53 +74,60 @@ def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, 
     DOY_DATA = np.array([])
     for year_idx, year in enumerate(years):
         print('PROCESSING YEAR ' + str(year))
-        p_year = year - 1
-        c_year = year
-        # Get this years_data
-        f_name = 'DATA/' + var_name + '.' + str(c_year) + '.nc'
-        if year_change:
-            end_doy_temp = 365
+        if not year_change:
+            f_name = 'DATA/' + var_name + '.' + str(c_year) + '.nc'
+            try:
+                year_data = Dataset(f_name, 'r').variables[var_name][start_doy:end_doy, latli:latui, lonli:lonui]
+                if lats.size == 0:
+                    lats = Dataset(f_name, 'r').variables['lat'][latli:latui]
+                if lons.size == 0:
+                    lons = Dataset(f_name, 'r').variables['lon'][lonli:lonui]
+            except:
+                # Last year reached
+                break
+            if lats.size != 0  and lons.size != 0 and DOY_DATA.size == 0:
+                DOY_DATA = np.empty([len(years), num_days, lats.shape[0], lons.shape[0]])
         else:
-            end_doy_temp = end_doy
-        try:
-            this_year_data = Dataset(f_name, 'r').variables[var_name][start_doy:end_doy_temp, latli:latui, lonli:lonui]
-            if lats.size == 0:
-                lats = Dataset(f_name, 'r').variables['lat'][latli:latui]
-            if lons.size == 0:
-                lons = Dataset(f_name, 'r').variables['lon'][lonli:lonui]
-        except:
-            # Last year reached
-            break
-        # Initialize DOY_DATA
-        if lats.size != 0  and lons.size != 0 and DOY_DATA.size == 0:
-            DOY_DATA = np.empty([len(years), num_days, lats.shape[0], lons.shape[0]])
-
-        if year_change:
-            # get data from previous year
+            p_year = year - 1
+            c_year = year
+            # get December data from previous year
             f_name = data_dir + var_name + '.' + str(p_year) + '.nc'
+            # Last Year Data
             try:
                 # FIX ME: How to deal with fill values
-                last_year_data = Dataset(f_name, 'r').variables[var_name][0:end_doy, latli:latui, lonli:lonui]
+                last_year_data = Dataset(f_name, 'r').variables[var_name][start_doy:365, latli:latui, lonli:lonui]
                 #last_year_data = list(Dataset(f_name, 'r').variables[var_name][333:365,lat_idx,lon_idx])
                 #last_year_data = [float(v) for v in last_year_data]
                 # get the valid lats
+                if lats.size == 0:
+                    lats = Dataset(f_name, 'r').variables['lat'][latli:latui]
+                if lons.size == 0:
+                    lons = Dataset(f_name, 'r').variables['lon'][lonli:lonui]
+                # last_year_data.close()
             except:
                 # On to next year
                 continue
+
+            f_name = 'DATA/' + var_name + '.' + str(c_year) + '.nc'
+            try:
+                this_year_data = Dataset(f_name, 'r').variables[var_name][0:end_doy, latli:latui, lonli:lonui]
+                # this_year_data.close()
+            except:
+                # Last year reached
+                break
+
+            if lats.size != 0  and lons.size != 0 and DOY_DATA.size == 0:
+                DOY_DATA = np.empty([len(years), num_days, lats.shape[0], lons.shape[0]])
+
             year_data = np.concatenate((last_year_data, this_year_data), axis=0)
-        else:
-            year_data = this_year_data
+            del this_year_data, last_year_data
 
-        del this_year_data, last_year_data
         DOY_DATA[year_idx] = year_data
-        del year_data
-
-    print('GETTING PERCENTILES')
+    print('COMPUTING PERCENTILES')
     PCTLS = np.empty([num_days, lats.shape[0], lons.shape[0]])
     for doy_idx in range(num_days):
         PCTLS[doy_idx] = np.apply_along_axis(compute_percentile, 0, DOY_DATA[:,doy_idx,:,:])
     del DOY_DATA
-    print PCTLS
     write_netcdf(PCTLS, lons, lats, doys, out_file)
 
 ########
@@ -129,15 +135,19 @@ def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, 
 ########
 if __name__ == '__main__' :
     # read_vars('tmin', 2011)
-    out_file = 'TEST_percentiles.nc'
+    out_file = 'percentiles.nc'
     data_dir = 'DATA/'
-    out_dir = 'RESULTS/'
-    years = range(1951, 1953)
+    out_dir = 'RESULTS/LIVNEH/'
+    years = range(1951, 2007)
     num_days = 90
     start_doy = 334
     var_name = 'tmin'
+    '''
     latbounds = [39 , 39.2 ]
     lonbounds = [ -119 + 360 , -118.8 + 360] # degrees east ?
+    '''
+    latbounds = [31, 49]
+    lonbounds = [235, 258]
     get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, data_dir, out_dir + out_file)
     # check_percentiles(out_file)
 

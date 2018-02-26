@@ -37,8 +37,11 @@ def get_plotting_data(years, data_dir):
             doy_vals_nz = doy_vals_all[np.where(doy_vals_all > 0)]
             year_data_all.append(doy_vals_all)
             year_data_nz.append(doy_vals_nz)
-            hist_data_all.append(round(np.mean(doy_vals_all[doy_idx]), 4))
-            hist_data_nz.append(round(np.mean(doy_vals_nz[doy_idx]), 4))
+            hist_data_all.append(round(np.mean(doy_vals_all), 4))
+            if doy_vals_nz.shape[0] > 0:
+                hist_data_nz.append(round(np.mean(doy_vals_nz), 4))
+            else:
+                hist_data_nz.append(-9999)
     for doy_idx in range(num_doys):
         mn = round(np.mean(year_data_all[doy_idx]), 4)
         doy_data_all.append(mn)
@@ -49,8 +52,8 @@ def get_plotting_data(years, data_dir):
 #M A I N
 ########
 if __name__ == '__main__' :
-    data_dir = 'RESULTS/'
-    years = range(1951,1953)
+    data_dir = 'RESULTS/LIVNEH/'
+    years = range(1951,2012)
     doy_data_all, doy_data_nz, hist_data_all, hist_data_nz = get_plotting_data(years, data_dir)
 
     with open(data_dir + 'ind_aves_doys.json', 'w') as outfile:
