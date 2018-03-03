@@ -21,60 +21,50 @@
     <script src="media/myjs/cold-highcharts-functions.js"></script>
     <script type="text/javascript">
     $(document).ready(function () {
-        //var data_dir = 'media/json/TEST/';
-        var data_dir = 'media/json/';
-        var img_dir = 'media/img';
+        //var livneh_data_dir = 'media/json/TEST/';
+        var livneh_data_dir = 'media/json/LIVNEH/';
+        var loca_data_dir = 'media/json/LOCA/';
         //SUMS
-        var data_file = data_dir + 'ind_sums_years.json';
+        var data_file = livneh_data_dir + 'ind_sums_years.json';
         index_sums_years(data_file, 'container-1');
         /*
-        data_file = data_dir + 'ind_sums_years_non_zero.json';
+        data_file = livneh_data_dir + 'ind_sums_years_non_zero.json';
         index_sums_years(data_file, 'container-2');
         */
         //Histograms
-        data_file = data_dir + 'hist_sum_all_years_and_locs.json';
+        /*
+        data_file = livneh_data_dir + 'hist_sum_all_years_and_locs.json';
         hist_sums(data_file, 'container-3');
-       
-        /*
-        data_file = data_dir + 'hist_sum_all_years_and_locs_non_zero.json';
-        hist_sums(data_file, 'container-4');
         */
-        //Box plots at 5 locations (non-zero indices)
-        /*
-        data_file = data_dir + 'box_plots_sums_5locs.json';
-        box_plot_sums_for_locations(data_file, 'container-5');
+        data_file = livneh_data_dir + 'hist_sum_all_years_and_locs_non_zero.json';
+        hist_sums(data_file, 'container-4');
         */
 
         //AVES
-        data_file = data_dir + 'ind_aves_doys.json';
+        data_file = livneh_data_dir + 'ind_aves_doys.json';
         index_aves_doys(data_file, 'container-6');
-        data_file = data_dir + 'ind_aves_doys_non_zero.json';
+        data_file = livneh_data_dir + 'ind_aves_doys_non_zero.json';
         index_aves_doys(data_file, 'container-7');
         /*
-        data_file = data_dir + 'hist_aves_all_doys_all_locs.json';
+        data_file = livneh_data_dir + 'hist_aves_all_doys_all_locs.json';
         hist_aves(data_file, 'container-8');
         */
-
-        data_file = data_dir + 'hist_aves_all_doys_all_locs_non_zero.json';
+        data_file = livneh_data_dir + 'hist_aves_all_doys_all_locs_non_zero.json';
         hist_aves(data_file, 'container-9');
         
-        /*
-        data_file = data_dir + 'box_plots_aves_5locs.json';
-        box_plot_aves_for_locations(data_file, 'container-10');
-        */
 
         //PCA analysis
-        data_file = data_dir + 'PCA_COMPONENT_1_TS.json';
+        data_file = livneh_data_dir + 'PCA_COMPONENT_1_TS.json';
         pca_ts(data_file, 'container-12', '1')
 
-        data_file = data_dir + 'PCA_COMPONENT_2_TS.json';
+        data_file = livneh_data_dir + 'PCA_COMPONENT_2_TS.json';
         pca_ts(data_file, 'container-13', '2')
 
-        data_file = data_dir + 'PCA_COMPONENT_3_TS.json';
+        data_file = livneh_data_dir + 'PCA_COMPONENT_3_TS.json';
         pca_ts(data_file, 'container-14', '3')
 
         //OTHER
-        data_file = data_dir + 'box_plots_num_days_all_years_and_locs.json';
+        data_file = livneh_data_dir + 'box_plots_num_days_all_years_and_locs.json';
         box_plot_num_days(data_file, 'container-11');
     });
     </script>
@@ -112,28 +102,20 @@
             </div>
         </div>
         -->
+        <!--
         <div class="row">
             <h3 align="center">Histogram of index sums (all years, all locations)</h3>
             <div class="col-md-8 col-md-offset-1">
                 <div id="container-3"></div>
             </div>
         </div>
-        <!--
+        -->
         <div class="row">
             <h3 align="center">Histogram of non-zero index sums (all years, all locations)</h3>
             <div class="col-md-8 col-md-offset-1">
                 <div id="container-4"></div>
             </div>
         </div> 
-        -->   
-        <!--
-        <div class="row">
-            <h3 align="center">Box plot of index sums at 5 selected locations</h3>
-            <div class="col-md-8 col-md-offset-1">
-                <div id="container-5"></div>
-            </div>
-        </div>    
-        -->
         <h2 align="center">Index averages</h2>
         <div class="row">
             <h3 align="center">Index averages for each day of season (DJF)</h3>
@@ -141,12 +123,14 @@
                 <div id="container-6"></div>
             </div>
         </div>
+        <!--
         <div class="row">
             <h3 align="center">Non-zero index averages for each day of season (DJF)</h3>
             <div class="col-md-8 col-md-offset-1">
                 <div id="container-7"></div>
             </div>
         </div>
+        -->
         <!--
         <div class="row">
             <h3 align="center">Histogram of index averages (all doys, all locations)</h3>
@@ -160,15 +144,7 @@
             <div class="col-md-8 col-md-offset-1">
                 <div id="container-9"></div>
             </div>
-        </div>    
-        <!--
-        <div class="row">
-            <h3 align="center">Box plot of index aves at 5 selected locations</h3>
-            <div class="col-md-8 col-md-offset-1">
-                <div id="container-10"></div>
-            </div>
-        </div> 
-        -->
+        </div>
         <h2 align="center">PCA Analysis</h2>
         <div class="row">
             <h3 align="center">Component 1</h3>
@@ -180,10 +156,10 @@
                 <h4>Spatial patterns</h4>
                 <div id="container-15">
                     <div class="col-md-10 col2-md-offset-1">
-                        <img src="media/img/PC_1.png">
+                        <img src="media/img/LIVNEH/PC_1.png">
                     </div>
                     <div class="col-md-1 col2-md-offset-1">
-                        <img src="media/img/PC_1_legend.png">
+                        <img src="media/img/LIVNEH/PC_1_legend.png">
                     </div>
                 </div>
             </div>
@@ -198,10 +174,10 @@
                 <h4>Spatial patterns</h4>
                 <div id="container-16">
                     <div class="col-md-10 col2-md-offset-1">
-                        <img src="media/img/PC_2.png">
+                        <img src="media/img/LIVNEH/PC_2.png">
                     </div>
                     <div class="col-md-1 col2-md-offset-1">
-                        <img src="media/img/PC_2_legend.png">
+                        <img src="media/img/LIVNEH/PC_2_legend.png">
                     </div>
                 </div>
             </div>
@@ -216,10 +192,10 @@
                 <h4>Spatial patterns</h4>
                 <div id="container-17">
                     <div class="col-md-10 col2-md-offset-1">
-                        <img src="media/img/PC_3.png">
+                        <img src="media/img/LIVNEH/PC_3.png">
                     </div>
                     <div class="col-md-1 col2-md-offset-1">
-                        <img src="media/img/PC_3_legend.png">
+                        <img src="media/img/LIVNEH/PC_3_legend.png">
                     </div>
                 </div>
             </div>
@@ -234,18 +210,6 @@
         </div> 
    </div><!--col-md-10-->
 </div><!--End row main-->
-
-<!--
-<div class="row">
-    <div class="col-md-10 col-md-offset-1">
-       <img width="1000px" height="700px" src="media/img/PCA.png">
-    </div>
-    <br>
-    <div class="col-md-10 col-md-offset-1">
-       <img width="1000px" height="700px" src="media/img/RPCA.png">
-    </div>
-</div>
--->
 
 </body>
 
