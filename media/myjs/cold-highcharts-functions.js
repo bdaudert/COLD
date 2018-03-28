@@ -1,7 +1,6 @@
 function hist_aves(data_file, container){
     $.getJSON( data_file, function( data ) {
         var plot_data = data;
-        console.log(plot_data[0]);
         Highcharts.chart(container, {
             title: {
                 text: 'Histogram over index averages (all winter days, all location, 1951 - 2005)'
@@ -48,6 +47,7 @@ function hist_aves(data_file, container){
 function hist_sums(data_file, container){
     $.getJSON(data_file, function( data ) {
         var plot_data = data;
+        console.log(plot_data.length);
         Highcharts.chart(container, {
             title: {
                 text: 'Histogram over index sums over winter (all location, 1951 -2005)'
@@ -94,11 +94,15 @@ function hist_sums(data_file, container){
 function index_sums_years(data_file, container) {
     $.getJSON(data_file, function( ts_data ) {
         Highcharts.chart(container, {
+             chart: {
+                zoomType: 'x'
+            },
             title: {
                 text: 'Sum of indices over season (DJF) for each year, averaged over all gridpoints'
             },
             subtitle: {
-                text: 'Index = number of Deg C below 5th percentile'
+                //text: 'Index = number of Deg C below 5th percentile'
+                text: 'Click and drag in the plot area to zoom in'
             },
             yAxis: {
                 title: {
@@ -145,11 +149,15 @@ function index_aves_doys(data_file, container){
     $.getJSON( data_file, function( ts_data ) {
         var data = ts_data;
         Highcharts.chart(container, {
+             chart: {
+                zoomType: 'x'
+            },
             title: {
                 text: 'Average over all years (1951 - 2011) for each day in season (Dec 1 = 1, Feb 28 = 90), averaged over all gridpoints'
             },
             subtitle: {
-                text: 'Index = number of Deg C below 5th percentile'
+                //text: 'Index = number of Deg C below 5th percentile'
+                text: 'Click and drag in the plot area to zoom in'
             },
             yAxis: {
                 title: {

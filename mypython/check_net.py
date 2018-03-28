@@ -6,16 +6,29 @@ def check_percentiles(netfile):
     ds = Dataset(netfile, 'r')
     lons = ds.variables['lon'][:]
     lats = ds.variables['lat'][:]
-    perc = ds.variables['percentile'][:,:,:]
-    print ds.variables['percentile']
+    # perc = ds.variables['percentile'][:,:,:]
+    perc = ds.variables['percentile'][:,:]
     print('FILE: ' + str(netfile))
     print('Num Lats ' + str(len(lats)))
     print('Num Lons ' + str(len(lons)))
     cnt = 0
     cnt_miss = 0
+    cnt_mask = 0
     cnt_cold = 0
     for lat_idx, lat in enumerate(lats):
         for lon_idx, lon in enumerate(lons):
+            p = perc[lat_idx, lon_idx]
+            # print np.ma.is_masked(p)
+            if abs(p + 9999) > 0.0001:
+                cnt += 1
+            if abs(p + 9999) <= 0.0001:
+                cnt_miss += 1
+            if isinstance(p, np.ma.core.MaskedConstant):
+                cnt_mask += 1
+
+            if perc[lat_idx, lon_idx] < -25:
+                cnt_cold +=1
+            '''
             if any(perc[:,lat_idx, lon_idx]) != -9999:
                 # print indices[lat_idx][lon_idx]
                 cnt += 1
@@ -23,18 +36,20 @@ def check_percentiles(netfile):
                 cnt_miss += 1
             if any(perc[:,lat_idx, lon_idx]) < -25:
                 cnt_cold +=1
-    print perc[0][20]
+            '''
     print perc.shape
     print('Number of non-zero index arrays: ' + str(cnt))
     print('Number of missing index arrays: ' + str(cnt_miss))
-    print('Number of brrrrrr....: ' + str(cnt_cold))
+    print('Number of masked ....: ' + str(cnt_mask))
     # print indices[10][11]
 
 def check_indices(netfile):
     ds = Dataset(netfile, 'r')
     lons = ds.variables['lon'][:]
     lats = ds.variables['lat'][:]
-    indices = ds.variables['index']
+    indices = ds.variables['index'][:,:,:]
+    print('MASKING: ')
+    print(np.ma.is_masked(indices))
     print('FILE: ' + str(netfile))
     print('Num Lats ' + str(len(lats)))
     print('Num Lons ' + str(len(lons)))
@@ -43,7 +58,11 @@ def check_indices(netfile):
     print('NAN : ')
     print np.where(np.isnan(indices))
     print("GREATER 0")
-    print indices[np.where(indices <= 0)]
+    gz = indices[np.where(indices > 0)]
+    print gz.shape
+    print("ZERO")
+    z = indices[np.where(indices == 0)]
+    print z.shape
     #print indices[:,0:10,0:10]
     '''
     cnt = 0
@@ -105,19 +124,24 @@ def write_ll_file(netfile, outfile):
 #M A I N
 ########
 if __name__ == '__main__' :
-    netfiles = filter(os.path.isfile, glob.glob('RESULTS/LIVNEH/' + '5th_Indices_WUSA_*.nc'))
-    for netfile in netfiles[0:1]:
+    netfiles = filter(os.path.isfile, glob.glob('RESULTS/livneh/' + '5th_Indices_WUSA_*.nc'))
+    '''
+    for netfile in netfiles:
+        print netfile
         check_indices(netfile)
-    #netfile = 'RESULTS/LIVNEH/percentiles.nc'
-    #check_percentiles(netfile)
+    '''
+
+    # netfile = 'RESULTS/livneh/percentiles.nc'
+    netfile = 'RESULTS/livneh/test_percentiles.nc'
+    check_percentiles(netfile)
 
     '''
-    netfile = 'tasmin_day_CMCC-CM_historical_r1i1p1_19500101-19501231.LOCA_2016-04-02.16th.nc'
+    # netfile = 'tasmin_day_CMCC-CM_historical_r1i1p1_19500101-19501231.LOCA_2016-04-02.16th.nc'
+    netfile = '/media/DataSets/livneh/tmin.1950.nc'
     ds = Dataset(netfile, 'r')
-    print ds.variables['lon']
+    print ds.variables
     # write_ll_file(netfile, 'LOCA_lls.nc')
     '''
-
     '''
     netfile = 'LOCA_lls.nc'
     ds = Dataset(netfile, 'r')

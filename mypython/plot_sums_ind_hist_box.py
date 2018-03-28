@@ -5,56 +5,70 @@ import json
 # from osgeo import gdal, osr, ogr
 from netCDF4 import Dataset
 
-def get_plotting_data(years, data_dir):
+def get_plotting_data(var_name, years, data_dir):
     year_sums_all = []
     year_sums_nz = []
-    hist_data_all = []
-    hist_data_nz = []
+    data_all = np.array([])
+    hist_data = np.array([])
     # fort box plots
     ll_data = {}
     count = 0
-    for year_idx, year in enumerate(years):
-        net_file = data_dir + '5th_Indices_WUSA_' + str(year) + '.nc'
+    for yr_idx, year in enumerate(years):
+        net_file = data_dir + var_name + '_5th_Indices_WUSA_' + str(year) + '.nc'
         print net_file
         try:
             ds = Dataset(net_file, 'r')
         except:
-            year_sums.append(None)
+            year_sums_all.append(None)
             continue
-        num_lons = ds.variables['lon'][:].shape[0]
-        num_lats = ds.variables['lat'][:].shape[0]
-        indices = ds.variables['index'][:]
-        ll_sums = 0
-        ll_sums_non_zero = 0
-        indices_all = indices[np.where(indices != -9999)]
-        indices_nz = indices[np.where(indices >= 1)]
-        sum_all = np.sum(indices_all)
-        sum_nz = np.sum(indices_nz)
-        hist_data_all.append(sum_all)
-        hist_data_nz.append(sum_nz)
-        year_sums_all.append(sum_all/(num_lats*num_lons))
-        year_sums_nz.append(sum_nz/(num_lats*num_lons))
+        lats = ds.variables['lat'][:]
+        lons = ds.variables['lon'][:]
+        doys = ds.variables['doy'][:]
+        num_doys = doys.shape[0]
+        num_lons = lons.shape[0]
+        num_lats = lats.shape[0]
+        if lats.size != 0  and lons.size != 0 and hist_data.size == 0:
+            data_all = np.empty([len(years), num_doys, lats.shape[0], lons.shape[0]])
+            hist_data = np.empty([len(years), lats.shape[0], lons.shape[0]])
+        data_all[yr_idx] = ds.variables['index'][:,:,:]
+        hist_data[yr_idx] = np.sum(data_all[yr_idx], axis=0)
+
+    # HIST DATA
+    # Average over all years
+    hist_data = np.mean(hist_data, axis=0)
+    d = np.reshape(hist_data, num_lats * num_lons)
+    d_nz = d[np.where(d > 0)]
+    hist_data_all = [round(v,4) for v in list(d)]
+    hist_data_nz = [round(v,4) for v in list(d_nz)]
+    # SUMS TIME SERIES
+    for yr_idx, year in enumerate(years):
+        # Sum over season
+        s = np.sum(data_all[yr_idx], axis=0)
+        # Ave over grid points
+        s = np.reshape(s, num_lats * num_lons)
+        s_nz = s[s > 0]
+        year_sums_all.append(round(np.mean(s), 4))
+        year_sums_nz.append(round(np.mean(s_nz), 4))
     return year_sums_all, year_sums_nz, hist_data_all, hist_data_nz
 ########
 #M A I N
 ########
 if __name__ == '__main__' :
     years = range(1951,2012)
-    data_dir = 'RESULTS/LIVNEH/'
-    # year_sums, year_sums_non_zero, hist_data, hist_data_non_zero, box_plots_5locs = get_plotting_data(years, data_dir)
-    year_sums, year_sums_non_zero, hist_data, hist_data_non_zero = get_plotting_data(years, data_dir)
-    '''
-    with open(data_dir + 'box_plots_sums_5locs.json', 'w') as outfile:
-        json.dump(box_plots_5locs, outfile)
-    '''
-    with open(data_dir + 'ind_sums_years.json', 'w') as outfile:
-        json.dump(year_sums, outfile)
-    with open(data_dir + 'ind_sums_years_non_zero.json', 'w') as outfile:
-        json.dump(year_sums_non_zero, outfile)
-    with open(data_dir + 'hist_sum_all_years_and_locs.json', 'w') as outfile:
-        json.dump(hist_data, outfile)
-    with open(data_dir + 'hist_sum_all_years_and_locs_non_zero.json', 'w') as outfile:
-        json.dump(hist_data_non_zero, outfile)
-    print year_sums
-    print year_sums_non_zero
+    data_dir = 'RESULTS/livneh/'
+    for var_name in ['tmin', 'tmax']:
+        year_sums_all, year_sums_nz, hist_data_all, hist_data_nz = get_plotting_data(var_name, years, data_dir)
+        print year_sums_all
+        print year_sums_nz
+        print len(hist_data_all)
+        print len(hist_data_nz)
+
+        with open(data_dir + var_name + '_ind_sums_years.json', 'w') as outfile:
+            json.dump(year_sums_all, outfile)
+        with open(data_dir + var_name + '_ind_sums_years_nz.json', 'w') as outfile:
+            json.dump(year_sums_nz, outfile)
+        with open(data_dir + var_name + '_hist_sum_all_years_and_locs.json', 'w') as outfile:
+            json.dump(hist_data_all, outfile)
+        with open(data_dir + var_name + '_hist_sum_all_years_and_locs_nz.json', 'w') as outfile:
+            json.dump(hist_data_nz, outfile)
 

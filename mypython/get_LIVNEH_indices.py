@@ -3,8 +3,8 @@ from netCDF4 import Dataset
 from netcdftime import utime
 import json
 
-def get_lls(var_name, year):
-    f_name = 'DATA/' + var_name + '.' + str(year) + '.nc'
+def get_lls(data_dir, var_name, year):
+    f_name = data_dir + var_name + '.' + str(year) + '.nc'
     ds = Dataset(f_name, 'r')
     lats = ds.variables['lat'][:]
     lons = ds.variables['lon'][:]
@@ -32,13 +32,14 @@ def is_float_convertible(val):
     except:
         return False
 
-def write_netcdf(INDICES, year, lons, lats, doys, out_dir):
+def write_netcdf(INDICES, var_name, year, lons, lats, doys, out_dir):
     print 'Writing netcdf file'
-    DS = Dataset(out_dir + '5th_Indices_WUSA_' + str(year) + '.nc', 'w', format='NETCDF3_64BIT')
+    outfile = out_dir + var_name + '_5th_Indices_WUSA_' + str(year) + '.nc'
+    DS = Dataset(outfile, 'w', format='NETCDF3_64BIT')
     DS.description = '''
            At each livneh gridpoint in the Western United States
-           (BBOX: : -125, 31, -102, 49.1) for each DOY in Winter season(DJF),
-           the number degrees below the 5th percentile at that point are recorded
+           (BBOX: : -125, 31, -102, 49.1),
+           the number degrees below the seasonal (DJF) 5th percentile at that point are recorded
            '''
 
     #Define the dimensions
@@ -50,13 +51,23 @@ def write_netcdf(INDICES, year, lons, lats, doys, out_dir):
     DS.createDimension('day_in_season', ndays)
 
     #Define the variables
-    lat = DS.createVariable('lat', 'f4', ('latitude',), fill_value=1e20)
-    lon = DS.createVariable('lon', 'f4', ('longitude',), fill_value=1e20)
+    '''
+    lat = DS.createVariable('lat', 'f4', ('latitude',), fill_value=-9999)
+    lon = DS.createVariable('lon', 'f4', ('longitude',), fill_value=-9999)
     # FIX ME: save doys as ints
     # OverflowError: Python int too large to convert to C long
-    doy = DS.createVariable('doy', 'f4', ('day_in_season',), fill_value=1e20)
+    doy = DS.createVariable('doy', 'f4', ('day_in_season',), fill_value=-9999)
     ind = DS.createVariable('index', 'i4', ('day_in_season', 'latitude', 'longitude'), fill_value=-9999)
     ind.units = 'DegC below 5th precentile'
+    '''
+    lat = DS.createVariable('lat', 'f4', ('latitude',))
+    lon = DS.createVariable('lon', 'f4', ('longitude',))
+    # FIX ME: save doys as ints
+    # OverflowError: Python int too large to convert to C long
+    doy = DS.createVariable('doy', 'f4', ('day_in_season',))
+    ind = DS.createVariable('index', 'i4', ('day_in_season', 'latitude', 'longitude'))
+    ind.units = 'DegC below 5th precentile'
+
 
     #Populate variable
     lat[:] = lats
@@ -67,13 +78,13 @@ def write_netcdf(INDICES, year, lons, lats, doys, out_dir):
 
 def compute_indices(year_data, perc_data):
     y_data = year_data
-    y_data[y_data == 1e20] = np.nan
+    y_data[y_data == -9999] = np.nan
     diff = np.absolute(np.rint(np.subtract(perc_data,year_data)))
     ind =  np.where(np.less_equal(y_data, perc_data), diff, 0)
     return ind
 
 
-def get_indices(years, var_name, perc_file, data_dir, out_dir):
+def get_indices(num_days, start_doy, years, var_name, perc_file, data_dir, out_dir):
     '''
     For each year in years and day in season,  we compute the cold index
     at each lon, lat: the number of degrees below the 5th percentile
@@ -95,23 +106,19 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
     lon_min = lons[np.argmin(lons)]
     lon_max = lons[np.argmax(lons)]
     lonbounds = [lon_min, lon_max]
-    # FIX ME:in  get_percentiles needed--- does not save the doys as ints!!!
-    doys = np.array([int(d) for d in list(PD.variables['doy'][:])])
-    num_days = doys.shape[0]
-    start_doy = doys[0]
-    perc_data = PD.variables['percentile'][:,:,:]
+    perc_data = PD.variables['percentile'][:,:]
     PD.close()
-
     year_change = False
     if start_doy + num_days > 365:
         end_doy = num_days - (365 - start_doy)
+        doys = np.concatenate((np.arange(start_doy,365), np.arange(0,end_doy)))
         year_change = True
     else:
         end_doy = start_doy + num_days
-
+        doys = np.arange(start_doy, end_doy)
     # Read data file to find all lats, lons and set the bounds
     # according to lats, lons in percentile file
-    all_lats, all_lons = get_lls('tmin', years[0])
+    all_lats, all_lons = get_lls(data_dir, 'tmin', years[0])
     # latitude lower and upper index
     latli = np.argmin(np.abs(all_lats - latbounds[0]))
     latui = np.argmin(np.abs(all_lats - latbounds[1]))
@@ -123,9 +130,6 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
     # print all_lats[latli], all_lats[latui], all_lons[lonli], all_lons[lonui]
     del all_lats, all_lons
 
-    # PCA_data: [[doy1_year1_indices for eachll], [doy1_year1_indices for eachll], ....[doy90_year_last_indices for each ll]]
-    # PCA_data = [[] for i in range(len(years) * num_days)]
-    PCA_data = []
     for year_idx, year in enumerate(years):
         print('PROCESSING YEAR ' + str(year))
         p_year = year - 1
@@ -161,18 +165,20 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
         print('GETTING INDICES')
         INDICES = np.empty([num_days, lats.shape[0], lons.shape[0]], dtype=int)
         for doy_idx in range(num_days):
-            INDICES[doy_idx] =  compute_indices(year_data[doy_idx], perc_data[doy_idx])
+            INDICES[doy_idx] =  compute_indices(year_data[doy_idx], perc_data)
 
-        write_netcdf(INDICES, year, lons, lats, doys, out_dir)
+        write_netcdf(INDICES, var_name, year, lons, lats, doys, out_dir)
 ########
 #M A I N
 ########
 if __name__ == '__main__' :
     years = range(1951, 2012)
     # years = range(1951, 1953)
-    var_name = 'tmin'
-    data_dir = 'DATA/'
-    in_file_name = 'percentiles.nc'
-    out_dir = 'RESULTS/LIVNEH/'
-    perc_file = out_dir + in_file_name
-    get_indices(years, var_name, perc_file, data_dir, out_dir)
+    data_dir = '/media/DataSets/livneh/'
+    out_dir = 'RESULTS/livneh/'
+    num_days = 90
+    start_doy = 334
+    for var_name in ['tmin', 'tmax']:
+        in_file_name = var_name + '_percentiles.nc'
+        perc_file = out_dir + in_file_name
+        get_indices(num_days, start_doy, years, var_name, perc_file, data_dir, out_dir)

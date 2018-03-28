@@ -32,9 +32,10 @@ def is_float_convertible(val):
     except:
         return False
 
-def write_netcdf(INDICES, year, lons, lats, doys, out_dir):
+def write_netcdf(INDICES, var_name, model, rcp, year, lons, lats, doys, out_dir):
     print 'Writing netcdf file'
-    DS = Dataset(out_dir + '5th_Indices_WUSA_' + str(year) + '.nc', 'w', format='NETCDF3_64BIT')
+    out_file = out_dir + var_name + '_' + model + '_' + rcp + '_5th_Indices_WUSA_' + str(year) + '.nc'
+    DS = Dataset(out_file, 'w', format='NETCDF3_64BIT')
     DS.description = '''
            At each livneh gridpoint in the Western United States
            (BBOX: : -125, 31, -102, 49.1) for each DOY in Winter season(DJF),
@@ -55,7 +56,7 @@ def write_netcdf(INDICES, year, lons, lats, doys, out_dir):
     # FIX ME: save doys as ints
     # OverflowError: Python int too large to convert to C long
     doy = DS.createVariable('doy', 'f4', ('day_in_season',), fill_value=1e20)
-    ind = DS.createVariable('index', 'i4', ('day_in_season', 'latitude', 'longitude'), fill_value=-9999)
+    ind = DS.createVariable('index', 'i4', ('day_in_season', 'latitude', 'longitude'), fill_value=1e20)
     ind.units = 'DegC below 5th precentile'
 
     #Populate variable
@@ -84,6 +85,10 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
     :return: num years files containing the index data at each lon, lat and day of season
              out_dir + '5th_Indices_WUSA_' + str(year)+ '.nc',
     '''
+    if var_name == 'tmin':
+        loca_var_name = 'tasmin'
+    if var_name == 'tmax':
+        loca_var_name = 'tasmax'
 
     # Read percentile file
     PD = Dataset(perc_file, 'r')
@@ -134,7 +139,7 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
         else:
             end_doy_temp = end_doy
         try:
-            this_year_data = np.array(h5py.File(f_name, 'r')['tasmin'])
+            this_year_data = np.array(h5py.File(f_name, 'r')[loca_var_name])
             this_year_data = this_year_data[0:end_doy, latli:latui, lonli:lonui]
         except:
             # Last year reached
@@ -145,7 +150,7 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
             f_name = data_dir + str(p_year) + '.h5'
             try:
                 # FIX ME: How to deal with fill values
-                last_year_data = np.array(h5py.File(f_name, 'r')['tasmin'])
+                last_year_data = np.array(h5py.File(f_name, 'r')[loca_var_name])
                 last_year_data = last_year_data[start_doy:365, latli:latui, lonli:lonui]
             except:
                 # On to next year
@@ -159,16 +164,21 @@ def get_indices(years, var_name, perc_file, data_dir, out_dir):
         for doy_idx in range(num_days):
             INDICES[doy_idx] =  compute_indices(year_data[doy_idx], perc_data[doy_idx])
 
-        write_netcdf(INDICES, year, lons, lats, doys, out_dir)
+        write_netcdf(INDICES, var_name, model, rcp, year, lons, lats, doys, out_dir)
 ########
 #M A I N
 ########
 if __name__ == '__main__' :
     years = range(1951, 2012)
     # years = range(1951, 1953)
-    var_name = 'tmin'
-    data_dir = 'DATA/'
+    data_dir = '/media/DataSets/loca/'
     in_file_name = 'percentiles.nc'
-    out_dir = 'RESULTS/LOCA/'
+    out_dir = 'RESULTS/loca/'
     perc_file = out_dir + in_file_name
-    get_indices(years, var_name, perc_file, data_dir, out_dir)
+    for model in LOCA_CMIP5_MODELS.keys():
+        for rcp in rcps:
+            data_dir = loca_dir + model + '/' + rcp + '/'
+            for var_name in ['tmin', 'tmax']:
+                perc_file = out_dir + var_name + '_' +  model + '_' + rcp + '_percentiles.nc'
+                out_file = var_name + '_' + model + '_' + rcp + '_percentiles.nc'
+                get_indices(years, var_name, perc_file, data_dir, out_dir)

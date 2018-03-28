@@ -42,7 +42,7 @@ def array_to_raster(lats, lons, data_array, output_path, nodata=-9999):
     output_osr = osr.SpatialReference()
     output_osr.ImportFromEPSG(4326)
     output_ds.SetProjection(output_osr.ExportToWkt())
-    output_ds.SetGeoTransform([ulx, xres, 0, uly, 0, -yres])
+    output_ds.SetGeoTransform([ulx, xres, 0, uly, 0, yres])
     output_band = output_ds.GetRasterBand(1)
     output_band.WriteArray(data_array.reshape((output_rows,output_cols)))
     output_band.SetNoDataValue(float(np.finfo(np.float32).min))
@@ -121,7 +121,7 @@ def advance_date(date_dt, days, back_or_forward):
         d_dt_new = date_dt - dt.timedelta(days=int(days))
     return d_dt_new
 
-def get_PCA_data(years, data_dir):
+def get_PCA_data(var_name, years, data_dir):
     '''
     Row are time steps, columns are locations.
     For our domain
@@ -133,7 +133,7 @@ def get_PCA_data(years, data_dir):
     lats = np.array([])
     PCA_data = []
     for year in years:
-        DS = Dataset(data_dir + '5th_Indices_WUSA_' + str(year) + '.nc', 'r')
+        DS = Dataset(data_dir + var_name +  '_5th_Indices_WUSA_' + str(year) + '.nc', 'r')
         if lons.shape[0] == 0:
             lons = np.array([l -360 for l in DS.variables['lon'][:]])
             lats = DS.variables['lat'][:]
@@ -165,80 +165,64 @@ if __name__ == '__main__':
     print('Start Time: ' + str(start_time))
 
     years = range(1951, 2012)
-    data_dir = 'RESULTS/LIVNEH/'
+    data_dir = 'RESULTS/livneh/'
+    for var_name in ['tmin', 'tmax']:
+        print('PROCESSSING VARIABLE ' + var_name)
+        print('Extracting PCA data from index files')
 
-    print('Extracting PCA data from index files')
+        PCA_data, lons, lats = get_PCA_data(var_name, years, data_dir)
+        print('DATA MATRIX ' + str(PCA_data.shape))
 
-    #PCA_data, lons, lats = get_PCA_data(years, data_dir)
-    PCA_data, lons, lats = get_PCA_data(years, data_dir)
-    print('DATA MATRIX ' + str(PCA_data.shape))
+        # Scale PCA data
+        # Gives zero/NaN/infinity error
+        #PCA_data = scale_linear_bycolumn(PCA_data, high=1.0, low=0.0)
 
-    # Scale PCA data
-    # Gives zero/NaN/infinity error
-    #PCA_data = scale_linear_bycolumn(PCA_data, high=1.0, low=0.0)
-
-    #print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
-    print('Computing component matrix')
-
-    pca = PCA(n_components=3)
-    X_pca = pca.fit_transform(PCA_data)
-    #X_pca = pca.fit(PCA_data)
-    print('X_pca ' + str(X_pca.shape))
-    components = pca.components_.transpose()
-
-    print('COMPONENTS ' + str(components.shape))
-    #print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
-    print('Computing rotated components')
-
-    rotated_components = varimax(components).transpose()
-    #print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
-    print('ROTATED COMPONENTS ' + str(rotated_components.shape))
-
-    dates_dt = []
-    dates_ts = []
-    for year in years:
-        dates_dt.append(dt.datetime(year,12,1))
-        dates_ts.append(datetime_to_date(dates_dt[-1], '-'))
-        for doy_idx in range(1,90):
-            dates_dt.append(advance_date(dates_dt[-1],1, 'forward'))
-            dates_ts.append(datetime_to_date(dates_dt[-1], '-'))
-
-    rotated_components_list = []
-    for c_idx in range(3):
-        print('Working component ' + str(c_idx + 1))
-        #comp = [round(c, 4) for c in rotated_components[c_idx]]
-        #rotated_components_list.append(comp)
-        #Only get time series for first threee components
-        print('Finding time series data')
-        ts = rotated_components[c_idx].dot(PCA_data.T)
-        hc_ts_data = []
-        for i in range(ts.shape[0]):
-            hc_ts_data.append([dates_ts[i], round(ts[i], 4)])
         #print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
-        print('Saving time series data')
-        # Save time series data
-        with open(data_dir + 'PCA_COMPONENT_' + str(c_idx+1) + '_TS.json', 'w') as outfile:
-            json.dump(hc_ts_data, outfile)
-        print('Saving tiff')
-        #Generate tiff for component
-        out_file = data_dir + 'PCA_COMPONENT_' + str(c_idx + 1) + '_MAP.tiff'
-        array_to_raster(lats, lons, rotated_components[c_idx], out_file, nodata=-9999)
-    '''
-    # Save PCA data for plotting OR write tiff here
-    pca_json = {
-        'fracs':[round(f, 4) for f in fracs],
-        'rotated_components':rotated_components_list,
-        'lons': [round(l, 4) for l in list(lons)],
-        'lats': [round(l, 4) for l in list(lats)]
-    }
-    with open(data_dir + 'PCA_1_3_raw_data.json', 'w') as outfile:
-        json.dump(pca_json, outfile)
-    print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
-    '''
+        print('Computing component matrix')
 
-    '''
-    dates = mdates.date2num(dates_dt)
-    plt.plot_date(dates, ts)
-    plt.show()
-    plt.savefig('test_PCA.png')
-    '''
+        pca = PCA(n_components=3)
+        X_pca = pca.fit_transform(PCA_data)
+        #X_pca = pca.fit(PCA_data)
+        print('X_pca ' + str(X_pca.shape))
+        components = pca.components_.transpose()
+
+        print('COMPONENTS ' + str(components.shape))
+        #print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
+        print('Computing rotated components')
+
+        rotated_components = varimax(components).transpose()
+        #print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
+        print('ROTATED COMPONENTS ' + str(rotated_components.shape))
+
+        dates_dt = []
+        dates_ts = []
+        for year in years:
+            dates_dt.append(dt.datetime(year,12,1))
+            dates_ts.append(datetime_to_date(dates_dt[-1], '-'))
+            for doy_idx in range(1,90):
+                dates_dt.append(advance_date(dates_dt[-1],1, 'forward'))
+                dates_ts.append(datetime_to_date(dates_dt[-1], '-'))
+
+        rotated_components_list = []
+        for c_idx in range(3):
+            print('Working component ' + str(c_idx + 1))
+            #comp = [round(c, 4) for c in rotated_components[c_idx]]
+            #rotated_components_list.append(comp)
+            #Only get time series for first threee components
+            print('Finding time series data')
+            ts = rotated_components[c_idx].dot(PCA_data.T)
+            std_ts =  np.std(ts)
+            print('STANDARD DEVIATION')
+            print(std_ts)
+            hc_ts_data = []
+            for i in range(ts.shape[0]):
+                hc_ts_data.append([dates_ts[i], round(ts[i] / std_ts, 4)])
+            #print('Minutes elapsed: ' + str((dt.datetime.now() - start_time).total_seconds() / 60.0))
+            print('Saving time series data')
+            # Save time series data
+            with open(data_dir + var_name + '_pca_component_' + str(c_idx+1) + '_ts.json', 'w') as outfile:
+                json.dump(hc_ts_data, outfile)
+            print('Saving tif')
+            #Generate tif for component
+            out_file = data_dir + var_name + '_pca_component_' + str(c_idx + 1) + '.tif'
+            array_to_raster(lats, lons, rotated_components[c_idx] * std_ts, out_file, nodata=-9999)

@@ -4,11 +4,6 @@ from netCDF4 import Dataset
 import h5py
 import json
 
-def read_vars(var_name, year):
-    f_name = 'DATA/' + var_name + '.' + str(year) + '.nc'
-    ds = Dataset(f_name, 'r')
-    print ds.variables
-
 
 def get_lls():
     f_name = 'LOCA_lls.nc'
@@ -52,6 +47,10 @@ def compute_percentile(a):
     return int(round(np.percentile(b, 5)))
 
 def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, data_dir, out_file):
+    if var_name == 'tmin':
+        loca_var_name = 'tasmin'
+    if var_name == 'tmax':
+        loca_var_name = 'tasmax'
     year_change = False
     if start_doy + num_days > 365:
         end_doy = num_days - (365 - start_doy)
@@ -78,7 +77,7 @@ def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, 
         if not year_change:
             f_name = data_dir + str(c_year) + '.h5'
             try:
-                year_data = np.array(h5py.File(f_name, 'r')['tasmin'])
+                year_data = np.array(h5py.File(f_name, 'r')[loca_var_name])
                 year_data = year_data[start_doy:end_doy, latli:latui, lonli:lonui]
                 if lats.size == 0:
                     lats = all_lats[latli:latui]
@@ -95,11 +94,11 @@ def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, 
             # get December data from previous year
             f_name = data_dir + str(p_year) + '.h5'
             # Last Year Data
-            # last_year_data = np.array(h5py.File(f_name, 'r')['tasmin'])
+            # last_year_data = np.array(h5py.File(f_name, 'r')[loca_var_name])
             # last_year_data[start_doy:365, latli:latui, lonli:lonui]
             try:
                 # FIX ME: How to deal with fill values
-                last_year_data = np.array(h5py.File(f_name, 'r')['tasmin'])
+                last_year_data = np.array(h5py.File(f_name, 'r')[loca_var_name])
                 last_year_data = last_year_data[start_doy:365, latli:latui, lonli:lonui]
                 # get the valid lats
                 if lats.size == 0:
@@ -112,7 +111,7 @@ def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, 
                 continue
             f_name = data_dir + str(c_year) + '.h5'
             try:
-                this_year_data = np.array(h5py.File(f_name, 'r')['tasmin'])
+                this_year_data = np.array(h5py.File(f_name, 'r')[loca_var_name])
                 this_year_data = this_year_data[0:end_doy, latli:latui, lonli:lonui]
             except:
                 # Last year reached
@@ -153,12 +152,11 @@ if __name__ == '__main__' :
     rcps = ['rcp45', 'rcp85']
     # read_vars('tmin', 2011)
     loca_dir = '/media/DataSets/loca/'
-    out_dir = 'RESULTS/LOCA/'
+    out_dir = 'RESULTS/loca/'
     years = range(1951, 2007)
     #years = range(1951, 1952)
     num_days = 90
     start_doy = 334
-    var_name = 'tmin'
     '''
     latbounds = [39 , 39.2 ]
     lonbounds = [ -119 + 360 , -118.8 + 360] # degrees east ?
@@ -170,5 +168,7 @@ if __name__ == '__main__' :
         for rcp in rcps:
             data_dir = loca_dir + model + '/' + rcp + '/'
             out_file = model + '_' + rcp + '_percentiles.nc'
-            get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, data_dir, out_dir + out_file)
+            for var_name in ['tmin', 'tmax']:
+                out_file = var_name + '_' + model + '_' + rcp + '_percentiles.nc'
+                get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, data_dir, out_dir + out_file)
 

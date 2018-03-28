@@ -5,22 +5,13 @@ import numpy as np
 from netCDF4 import Dataset
 import json
 
-def get_lls(year, data_dir):
-    f_name = data_dir + '5th_Indices_WUSA_' + str(year) +'.nc'
-    ds = Dataset(f_name, 'r')
-    lats = ds.variables['lat']
-    lons = ds.variables['lon']
-    return lats, lons
-
-def get_plotting_data(years, data_dir):
+def get_plotting_data(var_name, years, data_dir):
     doy_data_all = []
     doy_data_nz = []
-    hist_data_all = []
-    hist_data_nz = []
-    year_data_all = []
-    year_data_nz = []
+    hist_data = np.array([])
     for yr_idx, year in enumerate(years):
-        net_file = data_dir + '5th_Indices_WUSA_' + str(year) + '.nc'
+        net_file = data_dir + var_name + '_5th_Indices_WUSA_' + str(year) + '.nc'
+        print net_file
         try:
             ds = Dataset(net_file, 'r')
         except:
@@ -31,36 +22,44 @@ def get_plotting_data(years, data_dir):
         num_lats = lats.shape[0]
         num_lons = lons.shape[0]
         num_doys = doys.shape[0]
-        data_all = ds.variables['index'][:,:,:]
-        for doy_idx in range(num_doys):
-            doy_vals_all = np.reshape(data_all[doy_idx,:,:],(num_lats*num_lons,))
-            doy_vals_nz = doy_vals_all[np.where(doy_vals_all > 0)]
-            year_data_all.append(doy_vals_all)
-            year_data_nz.append(doy_vals_nz)
-            hist_data_all.append(round(np.mean(doy_vals_all), 4))
-            if doy_vals_nz.shape[0] > 0:
-                hist_data_nz.append(round(np.mean(doy_vals_nz), 4))
-            else:
-                hist_data_nz.append(-9999)
-    for doy_idx in range(num_doys):
-        mn = round(np.mean(year_data_all[doy_idx]), 4)
+        if lats.size != 0  and lons.size != 0 and hist_data.size == 0:
+            hist_data = np.empty([len(years), num_doys, lats.shape[0], lons.shape[0]])
+        hist_data[yr_idx] = ds.variables['index'][:,:,:]
+
+    # Ave over years
+    hist_data = np.mean(hist_data, axis=0)
+    for doy_idx in range(hist_data.shape[0]):
+        dat = np.reshape(hist_data[doy_idx], num_lats * num_lons)
+        dat_nz = dat[np.where(dat > 0)]
+        mn = round(np.mean(dat), 4)
+        mn_nz = round(np.mean(dat_nz), 4)
         doy_data_all.append(mn)
-        mn = round(np.mean(year_data_nz[doy_idx]), 4)
-        doy_data_nz.append(mn)
+        doy_data_nz.append(mn_nz)
+
+    # Ave over doys
+    hist_data = np.mean(hist_data, axis = 0)
+    hist_data_all = np.reshape(hist_data, num_lats * num_lons)
+    hist_data_nz = hist_data[np.where(hist_data > 0)]
+    hist_data_all = [round(v,4) for v in list(hist_data_all)]
+    hist_data_nz = [round(v,4) for v in list(hist_data_nz)]
     return doy_data_all, doy_data_nz, hist_data_all, hist_data_nz
 ########
 #M A I N
 ########
 if __name__ == '__main__' :
-    data_dir = 'RESULTS/LIVNEH/'
+    data_dir = 'RESULTS/livneh/'
     years = range(1951,2012)
-    doy_data_all, doy_data_nz, hist_data_all, hist_data_nz = get_plotting_data(years, data_dir)
-
-    with open(data_dir + 'ind_aves_doys.json', 'w') as outfile:
-        json.dump(doy_data_all, outfile)
-    with open(data_dir + 'ind_aves_doys_non_zero.json', 'w') as outfile:
-        json.dump(doy_data_nz, outfile)
-    with open(data_dir + 'hist_aves_all_doys_all_locs.json', 'w') as outfile:
-        json.dump(hist_data_all, outfile)
-    with open(data_dir + 'hist_aves_all_doys_all_locs_non_zero.json', 'w') as outfile:
-        json.dump(hist_data_nz, outfile)
+    for var_name in ['tmin', 'tmax']:
+        doy_data_all, doy_data_nz, hist_data_all, hist_data_nz = get_plotting_data(var_name, years, data_dir)
+        print doy_data_all
+        print doy_data_nz
+        print len(hist_data_all)
+        print len(hist_data_nz)
+        with open(data_dir + var_name + '_ind_aves_doys.json', 'w') as outfile:
+            json.dump(doy_data_all, outfile)
+        with open(data_dir + var_name + '_ind_aves_doys_nz.json', 'w') as outfile:
+            json.dump(doy_data_nz, outfile)
+        with open(data_dir + var_name + '_hist_aves_all_doys_all_locs.json', 'w') as outfile:
+            json.dump(hist_data_all, outfile)
+        with open(data_dir + var_name + '_hist_aves_all_doys_all_locs_nz.json', 'w') as outfile:
+            json.dump(hist_data_nz, outfile)

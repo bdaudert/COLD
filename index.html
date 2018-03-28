@@ -27,31 +27,32 @@
         //SUMS
         var data_file = livneh_data_dir + 'ind_sums_years.json';
         index_sums_years(data_file, 'container-1');
+        
         /*
-        data_file = livneh_data_dir + 'ind_sums_years_non_zero.json';
+        data_file = livneh_data_dir + 'ind_sums_years_nz.json';
         index_sums_years(data_file, 'container-2');
         */
-        //Histograms
+        
+        //SUM Histograms
         /*
         data_file = livneh_data_dir + 'hist_sum_all_years_and_locs.json';
         hist_sums(data_file, 'container-3');
         */
-        data_file = livneh_data_dir + 'hist_sum_all_years_and_locs_non_zero.json';
+        data_file = livneh_data_dir + 'hist_sum_all_years_and_locs_nz.json';
         hist_sums(data_file, 'container-4');
-        */
-
         //AVES
         data_file = livneh_data_dir + 'ind_aves_doys.json';
         index_aves_doys(data_file, 'container-6');
-        data_file = livneh_data_dir + 'ind_aves_doys_non_zero.json';
+        data_file = livneh_data_dir + 'ind_aves_doys_nz.json';
         index_aves_doys(data_file, 'container-7');
+        
+        //AVE HISTOGRAMS
         /*
         data_file = livneh_data_dir + 'hist_aves_all_doys_all_locs.json';
         hist_aves(data_file, 'container-8');
         */
-        data_file = livneh_data_dir + 'hist_aves_all_doys_all_locs_non_zero.json';
+        data_file = livneh_data_dir + 'hist_aves_all_doys_all_locs_nz.json';
         hist_aves(data_file, 'container-9');
-        
 
         //PCA analysis
         data_file = livneh_data_dir + 'PCA_COMPONENT_1_TS.json';
@@ -87,9 +88,8 @@
         </p>
     
         <!--Figures--> 
-        <h2 align="center">Index sums</h2>
+        <h2 align="center">Index sums over days of winter season</h2>
         <div class="row">
-            <h3 align="center">Index sums</h3>
             <div class="col-md-8 col-md-offset-1">
                 <div id="container-1"></div>
             </div>
@@ -102,6 +102,8 @@
             </div>
         </div>
         -->
+        <h2 align="center">Histogram of index sums over winter season</h2>
+        <p align="center">At each location we compute the index sum over the season, then average over all years</p>
         <!--
         <div class="row">
             <h3 align="center">Histogram of index sums (all years, all locations)</h3>
@@ -116,9 +118,8 @@
                 <div id="container-4"></div>
             </div>
         </div> 
-        <h2 align="center">Index averages</h2>
+        <h2 align="center">Index averages over the years</h2>
         <div class="row">
-            <h3 align="center">Index averages for each day of season (DJF)</h3>
             <div class="col-md-8 col-md-offset-1">
                 <div id="container-6"></div>
             </div>
@@ -131,6 +132,8 @@
             </div>
         </div>
         -->
+        <h2 align="center">Histogram of index averages over years</h2>
+        <p align="center">At each location we compute the index average over the years, then average over all days of the season</p>
         <!--
         <div class="row">
             <h3 align="center">Histogram of index averages (all doys, all locations)</h3>
