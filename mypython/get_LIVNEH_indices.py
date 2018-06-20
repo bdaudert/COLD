@@ -140,28 +140,19 @@ def get_indices(num_days, start_doy, years, var_name, perc_file, data_dir, out_d
             end_doy_temp = 365
         else:
             end_doy_temp = end_doy
-        try:
-            this_year_data = Dataset(f_name, 'r').variables[var_name][start_doy:end_doy_temp, latli:latui+1, lonli:lonui+1]
-        except:
-            # Last year reached
-            break
+        last_year_data = []
+        this_year_data = Dataset(f_name, 'r').variables[var_name][start_doy:end_doy_temp, latli:latui+1, lonli:lonui+1]
         # Get last year's data if year change
         if year_change:
             # get December data from previous year
             f_name = data_dir + var_name + '.' + str(p_year) + '.nc'
-            try:
-                # FIX ME: How to deal with fill values
-                last_year_data = Dataset(f_name, 'r').variables[var_name][0:end_doy, latli:latui+1, lonli:lonui+1]
-                #last_year_data = list(Dataset(f_name, 'r').variables[var_name][333:365,lat_idx,lon_idx])
-                #last_year_data = [float(v) for v in last_year_data]
-                # get the valid lats
-            except:
-                # On to next year
-                continue
+            last_year_data = Dataset(f_name, 'r').variables[var_name][0:end_doy, latli:latui+1, lonli:lonui+1]
             year_data = np.concatenate((last_year_data, this_year_data), axis=0)
         else:
             year_data = this_year_data
         # del this_year_data, last_year_data
+        del this_year_data
+        del last_year_data
         print('GETTING INDICES')
         INDICES = np.empty([num_days, lats.shape[0], lons.shape[0]], dtype=int)
         for doy_idx in range(num_days):

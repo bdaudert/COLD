@@ -8,6 +8,7 @@ def check_percentiles(netfile):
     lats = ds.variables['lat'][:]
     # perc = ds.variables['percentile'][:,:,:]
     perc = ds.variables['percentile'][:,:]
+    print perc.shape
     print('FILE: ' + str(netfile))
     print('Num Lats ' + str(len(lats)))
     print('Num Lons ' + str(len(lons)))
@@ -124,24 +125,26 @@ def write_ll_file(netfile, outfile):
 #M A I N
 ########
 if __name__ == '__main__' :
-    netfiles = filter(os.path.isfile, glob.glob('RESULTS/livneh/' + '5th_Indices_WUSA_*.nc'))
     '''
-    for netfile in netfiles:
+    netfiles = filter(os.path.isfile, glob.glob('/media/DataSets/loca/' + model + '/' + 'tmax_rcp85_5th_Indices_WUSA_*.nc'))
+    for netfile in netfiles[0:5]:
         print netfile
         check_indices(netfile)
     '''
 
-    # netfile = 'RESULTS/livneh/percentiles.nc'
-    netfile = 'RESULTS/livneh/test_percentiles.nc'
+    #netfile = '/media/DataSets/livneh/tmin_percentiles.nc'
+    netfile = '/media/DataSets/loca/CNRM-CM5/rcp85/tmin_rcp85_percentiles.nc'
     check_percentiles(netfile)
 
+
     '''
-    # netfile = 'tasmin_day_CMCC-CM_historical_r1i1p1_19500101-19501231.LOCA_2016-04-02.16th.nc'
+    #netfile = 'tasmin_day_CMCC-CM_historical_r1i1p1_19500101-19501231.LOCA_2016-04-02.16th.nc'
     netfile = '/media/DataSets/livneh/tmin.1950.nc'
     ds = Dataset(netfile, 'r')
     print ds.variables
     # write_ll_file(netfile, 'LOCA_lls.nc')
     '''
+
     '''
     netfile = 'LOCA_lls.nc'
     ds = Dataset(netfile, 'r')

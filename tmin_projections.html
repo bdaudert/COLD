@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--css-->
+    <link rel="stylesheet" href="media/css/my_style.css">
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <!--jQuery-->
+    <script src="//code.jquery.com/jquery-3.1.0.min.js"></script>
+    <!--Highcharts-->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <!--My Highcharts-->
+    <script src="media/myjs/cold-utils.js"></script>
+    <script src="media/myjs/cold-highcharts-functions.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function () {
+        var livneh_data_dir = 'media/json/livneh/',
+            livneh_media_dir = 'media/img/livneh/',
+            loca_data_dir = 'media/json/loca/',
+            loca_media_dir = 'media/img/loca/', 
+            data_file, container;
+        
+        //Regression
+        data_file = livneh_data_dir + 'tmin_timeseries.json';
+        timeseries_plots(data_file, 'livneh-ts', 'Minimum', 'LIVNEH');
+        //PCA
+        data_file = livneh_data_dir + 'tmin_pca_correlation_1_ts.json';
+        container = 'livneh-pca1-ts';
+        pca_ts(data_file, container, '1');
+        data_file = livneh_data_dir + 'tmin_pca_correlation_2_ts.json';
+        container = 'livneh-pca2-ts';
+        pca_ts(data_file, container, '2');
+        data_file = livneh_data_dir + 'tmin_pca_correlation_3_ts.json';
+        container = 'livneh-pca3-ts';
+        pca_ts(data_file, container, '3');
+
+        var LOCA_MODELS = ['CNRM-CM5','HadGEM2-CC',
+            'HadGEM2-ES','GFDL-CM3','CanESM2','MICRO5',
+            'CESM1-BGC','ACCESS1-0', 'CCSM4'];
+        for (var i=0; i < LOCA_MODELS.length; i++){
+            //Regression
+            data_file = loca_data_dir +  LOCA_MODELS[i] + '/tmin_rcp85_2006_2100_timeseries.json';
+            timeseries_plots(data_file, LOCA_MODELS[i] + '-ts', 'Minimum', LOCA_MODELS[i]);
+            //PCA
+            data_file = loca_data_dir +  LOCA_MODELS[i] +  '/tmin_rcp85_2006_2099_pca_correlation_1_ts.json';
+            container = LOCA_MODELS[i] + '-pca1-ts';
+            pca_ts(data_file, container, '1')
+            data_file = loca_data_dir +  LOCA_MODELS[i] + '/tmin_rcp85_2006_2099_pca_correlation_2_ts.json';
+            container = LOCA_MODELS[i] + '-pca2-ts';
+            pca_ts(data_file, container, '2')
+            data_file = loca_data_dir +  LOCA_MODELS[i] + '/tmin_rcp85_2006_2099_pca_correlation_1_ts.json';
+            container = LOCA_MODELS[i] + '-pca3-ts';
+            pca_ts(data_file, container, '3')
+        };
+    });
+    </script>
+</head>
+
+<body>
+
+<!-- Content will go here -->
+<h1 align="center">Cold Extremes in the Southwest</h1>
+<div class="row main">
+    <div class="col-md-10 col-md-offset-1">
+        <h2>Intoduction</h2>
+        <p style="max-width: 90%">
+        We identified cold outbreaks from temperature data in the
+        <a target="_blank" href="https://www.esrl.noaa.gov/psd/data/gridded/data.livneh.html">linveh dataset</a>
+        and the <a target="_blank" href="http://loca.ucsd.edu/">LOCA dataset</a>
+        by computing a cold index each location (grid point). 
+        The cold index at longitude, latitude coordinate on a day is defined as the number of degrees below
+        the 5th percentile observed at that location. The time period over which the percentiles were computed
+        is 1951 - 2005. This analysis is run on the bounding box: -125, 31, -102, 49.1 (103968 locations).
+        </p>
+        <h2 align="left">Spatial Domain</h2>
+        <p style="max-width: 100%" align="left">
+            <img src="media/img/SpatialDomain.png">
+        </p>
+        <h2>Results</h2>
+        <!--TIME SERIES-->
+        <h2 align="center">Minimum Temperature and Cold Index time series</h2>
+        <p class="large">Cold Indices are summed over the winter season (DJF) and averaged over all gridpoints.</p>
+        <div class="row">
+            <h3></h3>
+            <!--livneh-->
+            <div class="col-md-4 c-vcenter">
+                <!--Livneh result-->
+                <div id="livneh-ts"></div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="CNRM-CM5-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="HadGEM2-CC-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="HadGEM2-ES-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="GFDL-CM3-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="CanESM2-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="MICRO5-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="CESM1-BGC-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="ACCESS1-0-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="CCSM4-ts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!--IMAGES-->
+        <!--Index maps-->
+        <div class="row">
+             <h2>Cold Index maps</h2>
+            <!--livneh-->
+           <!--livneh-->
+            <div class="col-md-4 c-vcenter" id="livneh-tmin_index_aves">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div class="col-md-10">
+                    <img src="media/img/livneh/tmin_index_aves.png">
+                </div>
+                <div class="col-md-2">
+                    <img src="media/img/livneh/tmin_index_aves_legend.png">
+                </div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4" id="CNRM-CM5-index_aves">
+                        <h3>CNRM-CM5</h3>
+                        <img src="media/img/loca/CNRM-CM5/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-CC-index_aves">
+                        <h3>HadGEM2-CC</h3>
+                        <img src="media/img/loca/HadGEM2-CC/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-ES-index_aves">
+                        <h3>HadGEM2-ES</h3>
+                        <img src="media/img/loca/HadGEM2-ES/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="GFDL-CM3-index_aves">
+                        <h3>GFDL-CM3</h3>
+                        <img src="media/img/loca/GFDL-CM3/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                    <div class="col-md-4" id="CanESM2-index_aves">
+                        <h3>CanESM2</h3>
+                        <img src="media/img/loca/CanESM2/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                    <div class="col-md-4" id="MICRO5-index_aves">
+                        <h3>MICRO5</h3>
+                        <img src="media/img/loca/MICRO5/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="CESM1-BGC-index_aves">
+                        <h3>CESM1-BGC</h3>
+                        <img src="media/img/loca/CESM1-BGC/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                    <div class="col-md-4" id="ACCESS1-0-index_aves">
+                        <h3>ACCESS1-0</h3>
+                        <img src="media/img/loca/ACCESS1-0/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                    <div class="col-md-4" id="CCSM4-index_aves">
+                        <h3>CCSM4</h3>
+                        <img src="media/img/loca/CCSM4/tmin_rcp85_2006_2099_index_aves.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Slope Maps of Cold Index Averages-->
+        <div class="row">
+            <h2>Slope Maps of Cold Index Averages</h2>
+            <!--livneh-->
+            <div class="col-md-4 c-vcenter" id="livneh-slopes-index-all">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div class="col-md-10">
+                    <img src="media/img/livneh/tmin_sums_slopes_all.png">   
+                </div>
+                <div class="col-md-2">
+                    <img src="media/img/livneh/tmin_sums_slopes_legend.png">
+                </div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4" id="CNRM-CM5-slopes-index-all">
+                        <h3>CNRM-CM5</h3>
+                        <img src="media/img/loca/CNRM-CM5/tmin_rcp85_2006_2099_sums_slopes_all.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-CC-slopes-index-all">
+                        <h3>HadGEM2-CC</h3>
+                        <img src="media/img/loca/HadGEM2-CC/tmin_rcp85_2006_2099_sums_slopes_all.png">  
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-ES-slopes-index-all">
+                        <h3>HadGEM2-ES</h3>
+                        <img src="media/img/loca/HadGEM2-ES/tmin_rcp85_2006_2099_sums_slopes_all.png">  
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="GFDL-CM3-slopes-index-all">
+                        <h3>GFDL-CM3</h3>
+                        <img src="media/img/loca/GFDL-CM3/tmin_rcp85_2006_2099_sums_slopes_all.png">  
+                    </div>
+                    <div class="col-md-4" id="CanESM2-slopes-index-all">
+                        <h3>CanESM2</h3>
+                        <img src="media/img/loca/CanESM2/tmin_rcp85_2006_2099_sums_slopes_all.png">  
+                    </div>
+                    <div class="col-md-4" id="MICRO5-slopes-index-all">
+                        <h3>MICRO5</h3>
+                        <img src="media/img/loca/MICRO5/tmin_rcp85_2006_2099_sums_slopes_all.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="CESM1-BGC-slopes-index-all">
+                        <h3>CESM1-BGC</h3>
+                        <img src="media/img/loca/CESM1-BGC/tmin_rcp85_2006_2099_sums_slopes_all.png">  
+                    </div>
+                    <div class="col-md-4" id="ACCESS1-0-slopes-index-all">
+                        <h3>ACCESS1-0</h3>
+                        <img src="media/img/loca/ACCESS1-0/tmin_rcp85_2006_2099_sums_slopes_all.png">  
+                    </div>
+                    <div class="col-md-4" id="CCSM4-slopes-index-all">
+                        <h3>CCSM4</h3>
+                        <img src="media/img/loca/CCSM4/tmin_rcp85_2006_2099_sums_slopes_all.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Slope Maps 0.05 of Cold Index Averages-->
+        <div class="row">
+            <h2>Slope Maps of Cold Index Averages where p value < 0.05 </h2>
+            <!--livneh-->
+            <div class="col-md-4 c-vcenter" id="livneh-slopes-index-all">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div class="col-md-10">
+                    <img src="media/img/livneh/tmin_sums_slopes_005.png">
+                </div>
+                <div class="col-md-2">
+                    <img src="media/img/livneh/tmin_sums_slopes_legend.png">
+                </div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4" id="CNRM-CM5-slopes-index-all">
+                        <h3>CNRM-CM5</h3>
+                        <img src="media/img/loca/CNRM-CM5/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-CC-slopes-index-all">
+                        <h3>HadGEM2-CC</h3>
+                        <img src="media/img/loca/HadGEM2-CC/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-ES-slopes-index-all">
+                        <h3>HadGEM2-ES</h3>
+                        <img src="media/img/loca/HadGEM2-ES/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="GFDL-CM3-slopes-index-all">
+                        <h3>GFDL-CM3</h3>
+                        <img src="media/img/loca/GFDL-CM3/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                    <div class="col-md-4" id="CanESM2-slopes-index-all">
+                        <h3>CanESM2</h3>
+                        <img src="media/img/loca/CanESM2/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                    <div class="col-md-4" id="MICRO5-slopes-index-all">
+                        <h3>MICRO5</h3>
+                        <img src="media/img/loca/MICRO5/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="CESM1-BGC-slopes-index-all">
+                        <h3>CESM1-BGC</h3>
+                        <img src="media/img/loca/CESM1-BGC/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                    <div class="col-md-4" id="ACCESS1-0-slopes-index-all">
+                        <h3>ACCESS1-0</h3>
+                        <img src="media/img/loca/ACCESS1-0/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                    <div class="col-md-4" id="CCSM4-slopes-index-all">
+                        <h3>CCSM4</h3>
+                        <img src="media/img/loca/CCSM4/tmin_rcp85_2006_2099_sums_slopes_005.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--???Slope Maps for temperatures????-->
+
+        <h1>Principle Component Analysis</h1>
+        <div class="row">
+            <h2>Principle Compomonent 1 </h2>
+            <!--livneh-->
+            <div class="col-md-4 c-vcenter" id="livneh_pca1_correlation">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div class="col-md-10">
+                    <img src="media/img/livneh/tmin_pca1_correlation.png">
+                </div>
+                <div class="col-md-2">
+                    <img src="media/img/livneh/tmin_pca1_correlation_legend.png">
+                </div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4" id="CNRM-CM5_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>CNRM-CM5</h3>
+                        <img src="media/img/loca/CNRM-CM5/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-CC_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>HadGEM2-CC</h3>
+                        <img src="media/img/loca/HadGEM2-CC/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-ES_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>HadGEM2-ES</h3>
+                        <img src="media/img/loca/HadGEM2-ES/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="GFDL-CM3_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>GFDL-CM3</h3>
+                        <img src="media/img/loca/GFDL-CM3/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="CanESM2_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>CanESM2</h3>
+                        <img src="media/img/loca/CanESM2/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="MICRO5_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>MICRO5</h3>
+                        <img src="media/img/loca/MICRO5/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="CESM1-BGC_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>CESM1-BGC</h3>
+                        <img src="media/img/loca/CESM1-BGC/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="ACCESS1-0_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>ACCESS1-0</h3>
+                        <img src="media/img/loca/ACCESS1-0/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="CCSM4_tmin_rcp85_2006_2099_pca1_correlation">
+                        <h3>CCSM4</h3>
+                        <img src="media/img/loca/CCSM4/tmin_rcp85_2006_2099_pca1_correlation.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--PCA 1 ts-->
+        <div class="row">
+           <!--livneh-->
+            <div class="col-md-4 c-vcenter">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div id="livneh-pca1-ts"></div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>CNRM-CM5</h3>
+                        <div id="CNRM-CM5-pca1-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>HadGEM2_CC</h3>
+                        <div id="HadGEM2-CC-pca1-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>HadGEM2-ES</h3>
+                        <div id="HadGEM2-ES-pca1-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>GFDL-CM3</h3>
+                        <div id="GFDL-CM3-pca1-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>CanESM2</h3>
+                        <div id="CanESM2-pca1-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>MICRO5</h3>
+                        <div id="MICRO5-pca1-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>CESM1-BGC</h3>
+                        <div id="CESM1-BGC-pca1-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>ACCESS1-0</h3>
+                        <div id="ACCESS1-0-pca1-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>CCSM4</h3>
+                        <div id="CCSM4-pca1-ts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--PCA 2 correlations-->
+        <div class="row">
+           <h2>Principle Compomonent 2 </h2>
+            <!--livneh-->
+            <div class="col-md-4 c-vcenter" id="livneh_pca2_correlation">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div class="col-md-10">
+                    <img src="media/img/livneh/tmin_pca2_correlation.png">
+                </div>
+                <div class="col-md-2">
+                    <img src="media/img/livneh/tmin_pca1_correlation_legend.png">
+                </div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4" id="CNRM-CM5_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>CNRM-CM5</h3>
+                        <img src="media/img/loca/CNRM-CM5/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-CC_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>HadGEM2-CC</h3>
+                        <img src="media/img/loca/HadGEM2-CC/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-ES_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>HadGEM2-ES</h3>
+                        <img src="media/img/loca/HadGEM2-ES/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="GFDL-CM3_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>GFDL-CM3</h3>
+                        <img src="media/img/loca/GFDL-CM3/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="CanESM2_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>CanESM2</h3>
+                        <img src="media/img/loca/CanESM2/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="MICRO5_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>MICRO5</h3>
+                        <img src="media/img/loca/MICRO5/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="CESM1-BGC_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>CESM1-BGC</h3>
+                        <img src="media/img/loca/CESM1-BGC/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="ACCESS1-0_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>ACCESS1-0</h3>
+                        <img src="media/img/loca/ACCESS1-0/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="CCSM4_tmin_rcp85_2006_2099_pca2_correlation">
+                        <h3>CCSM4</h3>
+                        <img src="media/img/loca/CCSM4/tmin_rcp85_2006_2099_pca2_correlation.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--PCA 2 ts-->
+        <div class="row">
+           <!--livneh-->
+            <div class="col-md-4 c-vcenter">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div id="livneh-pca2-ts"></div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>CNRM-CM5</h3>
+                        <div id="CNRM-CM5-pca2-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>HadGEM2_CC</h3>
+                        <div id="HadGEM2-CC-pca2-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>HadGEM2-ES</h3>
+                        <div id="HadGEM2-ES-pca2-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>GFDL-CM3</h3>
+                        <div id="GFDL-CM3-pca2-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>CanESM2</h3>
+                        <div id="CanESM2-pca2-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>MICRO5</h3>
+                        <div id="MICRO5-pca2-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>CESM1-BGC</h3>
+                        <div id="CESM1-BGC-pca2-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>ACCESS1-0</h3>
+                        <div id="ACCESS1-0-pca2-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>CCSM4</h3>
+                        <div id="CCSM4-pca2-ts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--PCA 3 correlations-->
+        <div class="row">
+            <h2>Principle Compomonent 3 </h2>
+           <!--livneh-->
+            <div class="col-md-4 c-vcenter" id="livneh_pca3_correlation">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div class="col-md-10">
+                    <img src="media/img/livneh/tmin_pca3_correlation.png">
+                </div>
+                <div class="col-md-2">
+                    <img src="media/img/livneh/tmin_pca1_correlation_legend.png">
+                </div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4" id="CNRM-CM5_tmin_rcp85_2006_2099_pca3_correlation.png">
+                        <h3>CNRM-CM5</h3>
+                        <img src="media/img/loca/CNRM-CM5/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-CC_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>HadGEM2-CC</h3>
+                        <img src="media/img/loca/HadGEM2-CC/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="HadGEM2-ES_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>HadGEM2-ES</h3>
+                        <img src="media/img/loca/HadGEM2-ES/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="GFDL-CM3_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>GFDL-CM3</h3>
+                        <img src="media/img/loca/GFDL-CM3/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="CanESM2_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>CanESM2</h3>
+                        <img src="media/img/loca/CanESM2/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="MICRO5_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>MICRO5</h3>
+                        <img src="media/img/loca/MICRO5/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" id="CESM1-BGC_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>CESM1-BGC</h3>
+                        <img src="media/img/loca/CESM1-BGC/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="ACCESS1-0_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>ACCESS1-0</h3>
+                        <img src="media/img/loca/ACCESS1-0/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                    <div class="col-md-4" id="CCSM4_tmin_rcp85_2006_2099_pca3_correlation">
+                        <h3>CCSM4</h3>
+                        <img src="media/img/loca/CCSM4/tmin_rcp85_2006_2099_pca3_correlation.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--PCA 3 ts-->
+        <div class="row">
+          <!--livneh-->
+            <div class="col-md-4 c-vcenter">
+                <!--Livneh result-->
+                <h3>LIVNEH</h3>
+                <div id="livneh-pca3-ts"></div>
+            </div>
+            <!--LOCA-->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>CNRM-CM5</h3>
+                        <div id="CNRM-CM5-pca3-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>HadGEM2_CC</h3>
+                        <div id="HadGEM2-CC-pca3-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>HadGEM2-ES</h3>
+                        <div id="HadGEM2-ES-pca3-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>GFDL-CM3</h3>
+                        <div id="GFDL-CM3-pca3-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>CanESM2</h3>
+                        <div id="CanESM2-pca3-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>MICRO5</h3>
+                        <div id="MICRO5-pca3-ts"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>CESM1-BGC</h3>
+                        <div id="CESM1-BGC-pca3-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>ACCESS1-0</h3>
+                        <div id="ACCESS1-0-pca3-ts"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>CCSM4</h3>
+                        <div id="CCSM4-pca3-ts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+   </div><!--col-md-10-->
+</div><!--End row main-->
+
+</body>
+</html>

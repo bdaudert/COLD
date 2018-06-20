@@ -116,6 +116,7 @@ def get_percentiles(num_days, start_doy, latbounds, lonbounds, var_name, years, 
     # b = PCTLS[np.where(np.absolute(PCTLS + 9999) > 0.001)]
     '''
     PCTLS = np.apply_along_axis(compute_percentile, 0, DOY_DATA)
+    print PCTLS.shape
     del DOY_DATA
     write_netcdf(PCTLS, lons, lats, out_file)
 
